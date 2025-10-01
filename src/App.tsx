@@ -287,7 +287,7 @@ function App() {
           <div className="bg-white rounded-lg shadow-lg p-10 max-w-lg w-full">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Contact</h2>
             <p className="text-gray-700 mb-2">Email: <a href="mailto:rudreshmanjunath15@gmail.com" className="text-blue-600 underline">rudreshmanjunath15@gmail.com</a></p>
-            <p className="text-gray-700 mb-2">LinkedIn: <a href="https://www.linkedin.com/in/rudresh-manjunath/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">rudresh-manjunath</a></p>
+            <p className="text-gray-700 mb-2">LinkedIn: <a href="https://www.linkedin.com/in/rudresh-manjunath21/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">rudresh-manjunath</a></p>
             <button className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700" onClick={() => setPage('main')}>Back</button>
           </div>
         </main>
