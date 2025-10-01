@@ -2,6 +2,7 @@ import React from 'react';
 import { generateSummary } from '../utils/geminiSummary';
 import { Trophy, CheckCircle, XCircle, RotateCcw, BarChart2 } from 'lucide-react';
 import { InterviewResult as IInterviewResult } from '../types';
+import { questionDatabase } from '../data/questions';
 import { updateUserScoreByEmail, updateUserSummaryByEmail } from '../firebase';
 import { generateHFSummary } from '../utils/huggingfaceSummary';
 
@@ -32,14 +33,24 @@ export function InterviewResult({ result, onRestart, onViewLeaderboard }: Interv
         }
       }
       setAiSummary(summary);
-      // Save summary to Firebase
-      if (result?.candidateEmail) {
-        let summaryToSave = summary;
-        if (!summary || summary === 'AI summary could not be generated.') {
-          // Fallback to static summary
-          summaryToSave = `Candidate ${result.candidateName} completed the interview on ${result.topic} with a score of ${result.score}%. Correct answers: ${result.correctAnswers} out of ${result.totalQuestions}.`;
+      // Build detailed result for saving
+      const originalQuestions = questionDatabase[result.topic] || [];
+      let detailedResult = `Candidate ${result.candidateName} completed the interview on ${result.topic} with a score of ${result.score}%.\nCorrect answers: ${result.correctAnswers} out of ${result.totalQuestions}.\n\nQuestions & Answers:`;
+      result.answers?.forEach((answer, idx) => {
+        const question = originalQuestions.find(q => q.id === answer.questionId);
+        if (!question) return;
+        detailedResult += `\nQ${idx + 1}: ${question.text}\nYour Answer: ${answer.userAnswer}\nCorrect Answer: ${question.correctAnswer}`;
+        if (answer.userAnswer !== question.correctAnswer) {
+          detailedResult += ' (Incorrect)';
+        } else {
+          detailedResult += ' (Correct)';
         }
-        await updateUserSummaryByEmail(result.candidateEmail, summaryToSave);
+        detailedResult += `\nTime Taken: ${answer.timeSpent} seconds\n`;
+      });
+      detailedResult += `\n\nAI Summary: ${summary}`;
+      // Save to Firebase
+      if (result?.candidateEmail) {
+        await updateUserSummaryByEmail(result.candidateEmail, detailedResult);
       }
       setLoadingSummary(false);
     }
@@ -113,6 +124,31 @@ export function InterviewResult({ result, onRestart, onViewLeaderboard }: Interv
             <div className="mt-4">
               <h4 className="text-md font-semibold text-blue-900 mb-2">AI Summary</h4>
               <p className="text-blue-800 leading-relaxed">{loadingSummary ? 'Generating summary...' : aiSummary}</p>
+            </div>
+            <div className="mt-6">
+              <h4 className="text-md font-semibold text-gray-900 mb-2">Questions & Answers</h4>
+              <ul className="space-y-4">
+                {result.answers?.map((answer, idx) => {
+                  const question = (questionDatabase[result.topic] || []).find(q => q.id === answer.questionId);
+                  if (!question) return null;
+                  // Fuzzy match logic (same as InterviewContext)
+                  const userAnswer = answer.userAnswer.toLowerCase().trim();
+                  const correctAnswer = question.correctAnswer.toLowerCase().trim();
+                  const keyTerms = correctAnswer.split(' ').filter(word => word.length > 4);
+                  const matchedTerms = keyTerms.filter(term => userAnswer.includes(term));
+                  const isCorrect = matchedTerms.length >= Math.ceil(keyTerms.length * 0.3);
+                  return (
+                    <li key={answer.questionId} className={`p-4 rounded-lg border ${isCorrect ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}`}>
+                      <div className="font-semibold text-gray-800 mb-1">Q{idx + 1}: {question.text}</div>
+                      <div className="text-sm text-gray-700">Your Answer: <span className={isCorrect ? 'text-green-700' : 'text-red-700'}>{answer.userAnswer}</span></div>
+                      {!isCorrect && (
+                        <div className="text-sm text-green-700">Correct Answer: {question.correctAnswer}</div>
+                      )}
+                      <div className="text-xs text-gray-500 mt-1">Time Taken: {answer.timeSpent} seconds</div>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           </div>
 

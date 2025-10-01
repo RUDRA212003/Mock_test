@@ -186,6 +186,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       correctAnswers,
       summary,
       completedAt: Date.now(),
+      answers: session.answers,
     };
 
     const results = JSON.parse(localStorage.getItem('interview_results') || '[]');

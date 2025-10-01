@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CircleUser as UserCircle, Briefcase, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CircleUser as UserCircle } from 'lucide-react';
 import { InterviewProvider, useInterview } from './contexts/InterviewContext';
 import { ResumeUpload } from './components/ResumeUpload';
 import { TopicSelection } from './components/TopicSelection';
@@ -76,24 +76,33 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
     setStep('upload');
   };
 
+  const [showResumeChoice, setShowResumeChoice] = useState(false);
   const handleRestart = () => {
     clearSession();
-    setCandidateInfo(null);
     setResult(null);
-    setStep('upload');
+    if (candidateInfo) {
+      setShowResumeChoice(true);
+    } else {
+      setStep('upload');
+    }
   };
 
   const handleViewLeaderboard = () => {
     setStep('leaderboard');
   };
 
+  const [showResultLoading, setShowResultLoading] = useState(false);
   React.useEffect(() => {
     if (session?.status === 'completed' && !result) {
-      const interviewResult = completeInterview();
-      if (interviewResult) {
-        setResult(interviewResult);
-        setStep('result');
-      }
+      setShowResultLoading(true);
+      setTimeout(() => {
+        const interviewResult = completeInterview();
+        if (interviewResult) {
+          setResult(interviewResult);
+          setStep('result');
+        }
+        setShowResultLoading(false);
+      }, 2500); // 2.5 seconds loading
     }
   }, [session?.status, result, completeInterview, setStep]);
 
@@ -103,14 +112,61 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
     );
   }
 
+  if (showResumeChoice) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] w-full">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Continue with previous resume details?</h2>
+          <p className="text-gray-600 mb-6">Would you like to use your last uploaded resume details for this interview, or upload a new one?</p>
+          <div className="flex gap-4 justify-center">
+            <button
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              onClick={() => {
+                setShowResumeChoice(false);
+                setStep('topic');
+              }}
+            >
+              Continue with Previous
+            </button>
+            <button
+              className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+              onClick={() => {
+                setShowResumeChoice(false);
+                setCandidateInfo(null);
+                setStep('upload');
+              }}
+            >
+              Upload New Resume
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   switch (step) {
     case 'upload':
       return <ResumeUpload onInfoExtracted={handleInfoExtracted} />;
     case 'topic':
-  return <TopicSelection candidateInfo={candidateInfo!} onTopicSelected={handleTopicSelected} />;
+      return <TopicSelection candidateInfo={candidateInfo!} onTopicSelected={handleTopicSelected} />;
     case 'interview':
-      return <InterviewChat />;
+      return <InterviewChat onFinalSubmit={() => {
+        const interviewResult = completeInterview();
+        if (interviewResult) {
+          setResult(interviewResult);
+          setStep('result');
+        }
+      }} />;
     case 'result':
+      if (showResultLoading) {
+        return (
+          <div className="flex flex-col items-center justify-center h-[60vh] w-full">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-b-4 border-gray-200 mb-6" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">AI evaluating your result...</h2>
+            <p className="text-lg text-blue-700">Please HOLD, your performance summary is being generated!</p>
+          </div>
+        );
+      }
       return <InterviewResult result={result} onRestart={handleRestart} onViewLeaderboard={handleViewLeaderboard} />;
     case 'leaderboard':
       return <InterviewerDashboard />;
@@ -204,10 +260,8 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setPage('landing')}>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-800">AI Interview Assistant</h1>
+              <img src="/public/logo.svg" alt="PREP AI Logo" className="w-10 h-10 rounded-lg" />
+              <h1 className="text-xl font-bold text-gray-800">PREP AI</h1>
             </div>
             {user && (
               <button

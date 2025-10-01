@@ -1,62 +1,64 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Clock, Send, CheckCircle } from 'lucide-react';
+import { Clock, CheckCircle, Flag } from 'lucide-react';
 import { useInterview } from '../contexts/InterviewContext';
-
-export function InterviewChat() {
+export function InterviewChat({ onFinalSubmit }: { onFinalSubmit?: () => void }) {
   const { currentQuestion, timeRemaining, submitAnswer, session } = useInterview();
   const [answer, setAnswer] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Reset answer when question changes
   useEffect(() => {
     setAnswer('');
-    textareaRef.current?.focus();
   }, [currentQuestion?.id]);
 
+  // Auto-submit if timer runs out and answer exists
   useEffect(() => {
     if (timeRemaining === 0 && answer.trim()) {
-      handleSubmit();
+      submitAnswer(answer);
     }
-  }, [timeRemaining]);
+  }, [timeRemaining, answer, submitAnswer]);
+
+  // Tab switch protection: only warning, no termination
+  const [tabSwitchWarned, setTabSwitchWarned] = useState(false);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && session?.status === 'in-progress') {
-        alert('Please stay on this page during the interview.');
+      if (document.hidden && session?.status === 'in-progress' && !tabSwitchWarned) {
+        alert('Warning: Please stay on this page during the interview. Switching tabs may affect your test.');
+        setTabSwitchWarned(true);
       }
     };
-
     const handleCopy = (e: ClipboardEvent) => {
       if (session?.status === 'in-progress') {
         e.preventDefault();
         alert('Copying is not allowed during the interview.');
       }
     };
-
     const handleContextMenu = (e: MouseEvent) => {
       if (session?.status === 'in-progress') {
         e.preventDefault();
       }
     };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('copy', handleCopy);
     document.addEventListener('contextmenu', handleContextMenu);
-
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('copy', handleCopy);
       document.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [session?.status]);
+  }, [session?.status, tabSwitchWarned]);
 
+
+  // Submission button handler
   const handleSubmit = () => {
     if (!answer.trim()) return;
     submitAnswer(answer);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    // Removed: MCQ does not use keypress for submission
+  // Skip button handler
+  const handleSkip = () => {
+    // Submit empty answer and go to next question
+    submitAnswer('');
   };
 
   if (!currentQuestion || !session) {
@@ -74,8 +76,10 @@ export function InterviewChat() {
     return 'text-red-600';
   };
 
+  // ...existing code...
+
   return (
-    <div ref={containerRef} className="w-full max-w-4xl mx-auto p-6">
+    <div className="w-full max-w-4xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
           <div className="flex items-center justify-between mb-4">
@@ -90,15 +94,13 @@ export function InterviewChat() {
               {formatTime(timeRemaining)}
             </div>
           </div>
-
           <div className="w-full bg-blue-800 rounded-full h-2">
             <div
               className="bg-white h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
-            />
+            ></div>
           </div>
         </div>
-
         <div className="p-8">
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
@@ -116,7 +118,6 @@ export function InterviewChat() {
               {currentQuestion.text}
             </h3>
           </div>
-
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-4">
@@ -138,32 +139,30 @@ export function InterviewChat() {
                 ))}
               </div>
             </div>
-
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500">
-                Select one option and click Submit Answer. You can also review your answer before submitting.
+                Select one option and click Submit Answer. You can also skip the question if needed.
               </p>
               <div className="flex gap-3">
                 <button
-                  type="button"
-                  onClick={() => alert('Review your answer and question before submitting.')}
-                  className="flex items-center gap-2 px-6 py-3 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors shadow"
+                  onClick={handleSkip}
+                  className="flex items-center gap-2 px-6 py-3 bg-gray-400 text-white font-medium rounded-lg hover:bg-gray-500 transition-colors"
                 >
-                  Review
+                  Skip
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!answer.trim() || timeRemaining === 0}
                   className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                 >
-                  <Send className="w-5 h-5" />
+                  {/* @ts-ignore */}
+                  <Clock className="w-5 h-5" />
                   Submit Answer
                 </button>
               </div>
             </div>
           </div>
         </div>
-
         <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <CheckCircle className="w-4 h-4" />
