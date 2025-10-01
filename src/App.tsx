@@ -85,6 +85,7 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
   const handleRestart = () => {
     clearSession();
     setResult(null);
+    // If candidateInfo exists, ask user to continue with previous details or upload new
     if (candidateInfo) {
       setShowResumeChoice(true);
     } else {
