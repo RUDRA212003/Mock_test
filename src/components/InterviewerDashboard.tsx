@@ -111,7 +111,7 @@ export function InterviewerDashboard() {
       </div>
 
       <div className="bg-white rounded-lg shadow mb-6 p-6">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-4 gap-4">
           <button
             onClick={() => {
               // Export all results to Excel
@@ -142,6 +142,18 @@ export function InterviewerDashboard() {
             className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow"
           >
             Download All Results (Excel)
+          </button>
+          <button
+            onClick={() => {
+              if (window.confirm('Are you sure you want to clear the leaderboard? This will remove all local leaderboard data. (This does NOT affect Firebase)')) {
+                localStorage.removeItem('interview_results');
+                setResults([]);
+                alert('Leaderboard cleared!');
+              }
+            }}
+            className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors shadow"
+          >
+            Clear Leaderboard
           </button>
         </div>
         <div className="flex flex-col md:flex-row gap-4 mb-6">

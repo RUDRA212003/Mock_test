@@ -30,7 +30,14 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
 
   const [candidateInfo, setCandidateInfo] = useState<CandidateInfo | null>(null);
   const [result, setResult] = useState<any>(null);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(hasInProgressSession);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Show welcome modal if there is an in-progress session
+  React.useEffect(() => {
+    if (hasInProgressSession) {
+      setShowWelcomeModal(true);
+    }
+  }, [hasInProgressSession]);
 
   React.useEffect(() => {
     if (session?.status === 'in-progress') {
