@@ -30,14 +30,7 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
 
   const [candidateInfo, setCandidateInfo] = useState<CandidateInfo | null>(null);
   const [result, setResult] = useState<any>(null);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-
-  // Show welcome modal if there is an in-progress session
-  React.useEffect(() => {
-    if (hasInProgressSession) {
-      setShowWelcomeModal(true);
-    }
-  }, [hasInProgressSession]);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(hasInProgressSession);
 
   React.useEffect(() => {
     if (session?.status === 'in-progress') {
@@ -78,14 +71,13 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
     clearSession();
     setCandidateInfo(null);
     setResult(null);
-    setStep('landing');
+  setStep('landing');
   };
 
   const [showResumeChoice, setShowResumeChoice] = useState(false);
   const handleRestart = () => {
     clearSession();
     setResult(null);
-    // If candidateInfo exists, ask user to continue with previous details or upload new
     if (candidateInfo) {
       setShowResumeChoice(true);
     } else {
@@ -139,7 +131,7 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
               onClick={() => {
                 setShowResumeChoice(false);
                 setCandidateInfo(null);
-                setStep('landing');
+            setStep('landing');
               }}
             >
               Upload New Resume
@@ -194,7 +186,7 @@ function App() {
 
   // Persist user in localStorage
   React.useEffect(() => {
-  const storedUser = localStorage.getItem('crisp_ai_user');
+    const storedUser = localStorage.getItem('prep_ai_user');
     if (storedUser) {
       try {
         setUserRaw(JSON.parse(storedUser));
@@ -213,25 +205,13 @@ function App() {
     return () => window.removeEventListener('navigate', handler);
   }, []);
 
-  // Listen for app-step events (for navigation from dashboard)
-  React.useEffect(() => {
-    const handler = (e: any) => {
-      if (e.type === 'app-step' && e.detail) {
-        setStep(e.detail);
-        setPage('main');
-      }
-    };
-    window.addEventListener('app-step', handler);
-    return () => window.removeEventListener('app-step', handler);
-  }, []);
-
   // Wrap setUser to persist
   const setUser = (u: any) => {
     setUserRaw(u);
     if (u) {
-      localStorage.setItem('crisp_ai_user', JSON.stringify(u));
+      localStorage.setItem('prep_ai_user', JSON.stringify(u));
     } else {
-      localStorage.removeItem('crisp_ai_user');
+      localStorage.removeItem('prep_ai_user');
     }
   };
 

@@ -10,14 +10,10 @@ export function InterviewChat({ onFinalSubmit }: { onFinalSubmit?: () => void })
     setAnswer('');
   }, [currentQuestion?.id]);
 
-  // Auto-submit if timer runs out: submit answer if present, else submit empty to go to next question
+  // Auto-submit if timer runs out and answer exists
   useEffect(() => {
-    if (timeRemaining === 0) {
-      if (answer.trim()) {
-        submitAnswer(answer);
-      } else {
-        submitAnswer('');
-      }
+    if (timeRemaining === 0 && answer.trim()) {
+      submitAnswer(answer);
     }
   }, [timeRemaining, answer, submitAnswer]);
 

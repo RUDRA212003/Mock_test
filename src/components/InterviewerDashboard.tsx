@@ -16,8 +16,6 @@ export function InterviewerDashboard() {
       if (saved) {
         const parsed = JSON.parse(saved);
         setResults(parsed);
-      } else {
-        setResults([]);
       }
     };
 
@@ -113,7 +111,7 @@ export function InterviewerDashboard() {
       </div>
 
       <div className="bg-white rounded-lg shadow mb-6 p-6">
-        <div className="flex justify-end mb-4 gap-4">
+        <div className="flex justify-end mb-4">
           <button
             onClick={() => {
               // Export all results to Excel
@@ -130,7 +128,7 @@ export function InterviewerDashboard() {
                 new Date(r.completedAt).toLocaleString(),
                 r.summary?.replace(/\n/g, ' ')
               ]);
-              let csv = header.join(',') + '\n' + rows.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}` ).join(',')).join('\n');
+              let csv = header.join(',') + '\n' + rows.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')).join('\n');
               const blob = new Blob([csv], { type: 'text/csv' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
@@ -144,18 +142,6 @@ export function InterviewerDashboard() {
             className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow"
           >
             Download All Results (Excel)
-          </button>
-          <button
-            onClick={() => {
-              if (window.confirm('Are you sure you want to clear the leaderboard? This will remove all local leaderboard data. (This does NOT affect Firebase)')) {
-                localStorage.removeItem('interview_results');
-                setResults([]);
-                alert('Leaderboard cleared!');
-              }
-            }}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors shadow"
-          >
-            Clear Leaderboard
           </button>
         </div>
         <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -204,15 +190,9 @@ export function InterviewerDashboard() {
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-700 mb-2">No interviews yet</h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-500">
               Completed interviews will appear here for review
             </p>
-            <span
-              className="inline-block text-blue-600 underline cursor-pointer text-lg font-medium hover:text-blue-800 transition-colors"
-              onClick={() => window.dispatchEvent(new CustomEvent('app-step', { detail: 'upload' }))}
-            >
-              Take a New Interview
-            </span>
           </div>
         ) : (
           <div className="overflow-x-auto">

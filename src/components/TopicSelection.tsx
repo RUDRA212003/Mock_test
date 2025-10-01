@@ -11,7 +11,6 @@ interface TopicSelectionProps {
 export function TopicSelection({ candidateInfo, onTopicSelected }: TopicSelectionProps) {
   const [selectedTopic, setSelectedTopic] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [accepted, setAccepted] = useState(false);
 
   const handleSubmit = () => {
     if (selectedTopic) {
@@ -93,39 +92,15 @@ export function TopicSelection({ candidateInfo, onTopicSelected }: TopicSelectio
             <li>• Answer will auto-submit when time runs out</li>
             <li>• Your progress is automatically saved</li>
           </ul>
-          <div className="mt-6 flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="accept-guidelines"
-              checked={accepted}
-              onChange={e => setAccepted(e.target.checked)}
-              className="w-5 h-5 accent-blue-600"
-            />
-            <label htmlFor="accept-guidelines" className="text-blue-900 text-sm font-medium cursor-pointer">
-              I have read and accept the interview guidelines
-            </label>
-          </div>
         </div>
 
         <button
           onClick={handleSubmit}
-          disabled={!selectedTopic || !accepted || loading}
-          className={`w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors ${loading ? 'animate-pulse' : ''}`}
+          disabled={!selectedTopic || loading}
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 01-8 8z" />
-              </svg>
-              Generating...
-            </span>
-          ) : (
-            <>
-              Start Interview
-              <ArrowRight className="w-5 h-5" />
-            </>
-          )}
+          {loading ? 'Generating...' : 'Start Interview'}
+          <ArrowRight className="w-5 h-5" />
         </button>
       </div>
     </div>
