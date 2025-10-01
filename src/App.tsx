@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
-import { CircleUser as UserCircle } from 'lucide-react';
+import Footer from './components/Footer';
+import { Login } from './components/Login';
 import { InterviewProvider, useInterview } from './contexts/InterviewContext';
 import { ResumeUpload } from './components/ResumeUpload';
 import { TopicSelection } from './components/TopicSelection';
+import LandingScreen from './components/LandingScreen';
 import { InterviewChat } from './components/InterviewChat';
 import { InterviewResult } from './components/InterviewResult';
 import { WelcomeBackModal } from './components/WelcomeBackModal';
 import { InterviewerDashboard } from './components/InterviewerDashboard';
-import { Login } from './components/Login';
-import { auth, db } from './firebase';
-import { signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 import { CandidateInfo } from './types';
 
-type InterviewStep = 'upload' | 'topic' | 'interview' | 'result' | 'leaderboard';
+type InterviewStep = 'landing' | 'upload' | 'topic' | 'interview' | 'result' | 'leaderboard' | 'postLoginChoice';
 interface IntervieweeFlowProps {
   step: InterviewStep;
   setStep: (step: InterviewStep) => void;
@@ -73,7 +71,7 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
     clearSession();
     setCandidateInfo(null);
     setResult(null);
-    setStep('upload');
+  setStep('landing');
   };
 
   const [showResumeChoice, setShowResumeChoice] = useState(false);
@@ -83,7 +81,7 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
     if (candidateInfo) {
       setShowResumeChoice(true);
     } else {
-      setStep('upload');
+      setStep('landing');
     }
   };
 
@@ -133,7 +131,7 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
               onClick={() => {
                 setShowResumeChoice(false);
                 setCandidateInfo(null);
-                setStep('upload');
+            setStep('landing');
               }}
             >
               Upload New Resume
@@ -145,6 +143,8 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
   }
 
   switch (step) {
+    case 'landing':
+      return <LandingScreen onStart={() => setStep('upload')} />;
     case 'upload':
       return <ResumeUpload onInfoExtracted={handleInfoExtracted} />;
     case 'topic':
@@ -175,147 +175,201 @@ function IntervieweeFlow({ step, setStep, refetchUserInfo }: IntervieweeFlowProp
   }
 }
 
-function UserPanel({ user, userInfo, onLogout }: { user: any, userInfo: any, onLogout: () => void }) {
-  return (
-    <div className="absolute top-16 right-8 bg-white shadow-lg rounded-lg p-6 z-50 min-w-[250px]">
-      <div className="flex items-center gap-3 mb-4">
-        <UserCircle className="w-10 h-10 text-blue-600" />
-        <div>
-          <div className="font-bold text-lg text-gray-800">{userInfo?.name || user.displayName || user.email}</div>
-          <div className="text-sm text-gray-500">{userInfo?.email || user.email}</div>
-          <div className="text-sm text-gray-500">{userInfo?.phone || ''}</div>
-        </div>
-      </div>
-      <button
-        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
-        onClick={onLogout}
-      >
-        Logout
-      </button>
-    </div>
-  );
-}
 
-function AppContent() {
-  const [page, setPage] = useState<'landing' | 'interview' | 'leaderboard'>('landing');
-  const [interviewStep, setInterviewStep] = useState<InterviewStep>('upload');
-  const [user, setUser] = useState<any>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [showUserPanel, setShowUserPanel] = useState(false);
-  const [userInfo, setUserInfo] = useState<any>(null);
 
-  React.useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
-      setUser(firebaseUser);
-      setCheckingAuth(false);
-      console.log('Firebase user:', firebaseUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  React.useEffect(() => {
-    async function fetchUserInfo() {
-      if (user?.email) {
-        const docRef = doc(db, 'users', user.email);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setUserInfo(docSnap.data());
-        }
-      }
-    }
-    fetchUserInfo();
-  }, [user]);
-
-  // Add a callback to refetch user info
-  const refetchUserInfo = async () => {
-    if (user?.email) {
-      const docRef = doc(db, 'users', user.email);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setUserInfo(docSnap.data());
-      }
-    }
-  };
-
-  // Show loading while checking auth
-  if (checkingAuth) {
-    return <div className="flex items-center justify-center h-screen text-xl">Checking authentication...</div>;
-  }
-
-  // Require login for interview and leaderboard
-  if ((page === 'interview' || page === 'leaderboard') && !user) {
-    return <Login onLogin={setUser} />;
-  }
-
-  // Logout handler
-  const handleLogout = async () => {
-    await signOut(auth);
-    setUser(null);
-    setShowUserPanel(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      <nav className="bg-white shadow-sm border-b border-gray-200 w-full relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setPage('landing')}>
-              <img src="/Logo.svg" alt="PREP AI Logo" className="w-10 h-10 rounded-lg" />
-              <h1 className="text-xl font-bold text-gray-800">PREP AI</h1>
-            </div>
-            {user && (
-              <button
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                onClick={() => setShowUserPanel((v) => !v)}
-                title="User Panel"
-              >
-                <UserCircle className="w-6 h-6 text-blue-600" />
-                <span className="font-medium text-gray-700">{userInfo?.name || user.displayName || user.email}</span>
-              </button>
-            )}
-          </div>
-        </div>
-        {user && showUserPanel && <UserPanel user={user} userInfo={userInfo} onLogout={handleLogout} />}
-      </nav>
-      <main className="flex-1 py-8 w-full">
-        {page === 'landing' && (
-          <div className="flex flex-col items-center justify-center h-full w-full px-4">
-            <div className="bg-white rounded-lg shadow-lg p-8 sm:p-10 flex flex-col items-center gap-8 w-full max-w-md">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 text-center">Welcome!</h2>
-              <div className="flex flex-col sm:flex-row gap-4 w-full">
-                <button
-                  className="w-full sm:w-auto px-6 py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
-                  onClick={() => setPage('interview')}
-                >
-                  Start Interview
-                </button>
-                <button
-                  className="w-full sm:w-auto px-6 py-4 bg-gray-200 text-gray-800 rounded-lg font-semibold text-lg hover:bg-gray-300 transition-colors"
-                  onClick={() => setPage('leaderboard')}
-                >
-                  Go to Leaderboard
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        {page === 'interview' && (
-          <IntervieweeFlow step={interviewStep} setStep={setInterviewStep} refetchUserInfo={refetchUserInfo} />
-        )}
-        {page === 'leaderboard' && (
-          <InterviewerDashboard />
-        )}
-      </main>
-    </div>
-  );
-}
 
 function App() {
+  const [step, setStep] = useState<InterviewStep>('landing');
+  const [user, setUserRaw] = useState<any>(null);
+  const [showUserPanel, setShowUserPanel] = useState(false);
+  const [page, setPage] = useState<string>('main');
+
+  // Persist user in localStorage
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem('prep_ai_user');
+    if (storedUser) {
+      try {
+        setUserRaw(JSON.parse(storedUser));
+      } catch {}
+    }
+  }, []);
+
+  // Listen for navigation events
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      if (e.detail === 'about' || e.detail === 'contact' || e.detail === 'privacy') {
+        setPage(e.detail);
+      }
+    };
+    window.addEventListener('navigate', handler);
+    return () => window.removeEventListener('navigate', handler);
+  }, []);
+
+  // Listen for app-step events (for navigation from dashboard)
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      if (e.type === 'app-step' && e.detail) {
+        setStep(e.detail);
+        setPage('main');
+      }
+    };
+    window.addEventListener('app-step', handler);
+    return () => window.removeEventListener('app-step', handler);
+  }, []);
+
+  // Wrap setUser to persist
+  const setUser = (u: any) => {
+    setUserRaw(u);
+    if (u) {
+      localStorage.setItem('prep_ai_user', JSON.stringify(u));
+    } else {
+      localStorage.removeItem('prep_ai_user');
+    }
+  };
+
+  // Navigation bar
+  const NavBar = () => (
+    <nav className="bg-white shadow-sm border-b border-gray-200 w-full relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setStep('landing'); setPage('main'); }}>
+            <img src="/Logo.svg" alt="PREP AI Logo" className="w-10 h-10 rounded-lg" />
+            <h1 className="text-xl font-bold text-gray-800">PREP AI</h1>
+          </div>
+          {user && (
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              onClick={() => setShowUserPanel((v) => !v)}
+              title="User Panel"
+            >
+              <span className="font-medium text-gray-700">{user.displayName || user.email}</span>
+            </button>
+          )}
+        </div>
+      </div>
+      {/* User panel dropdown */}
+      {user && showUserPanel && (
+        <div className="absolute top-16 right-8 bg-white shadow-lg rounded-lg p-6 z-50 min-w-[250px]">
+          <div className="font-bold text-lg text-gray-800">{user.displayName || user.email}</div>
+          <div className="text-sm text-gray-500">{user.email}</div>
+          <button
+            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors mt-4"
+            onClick={() => { setUser(null); setShowUserPanel(false); setStep('landing'); setPage('main'); }}
+          >
+            Logout
+          </button>
+        </div>
+      )}
+    </nav>
+  );
+
+  // Static pages
+  if (page === 'about') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-10 max-w-lg w-full">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">About</h2>
+            <p className="text-gray-700 mb-2">PREP AI developed by <b>Rudresh</b> from Kalpataru Institute of Technology, Tiptur.</p>
+            <button className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700" onClick={() => setPage('main')}>Back</button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  if (page === 'contact') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-10 max-w-lg w-full">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Contact</h2>
+            <p className="text-gray-700 mb-2">Email: <a href="mailto:rudreshmanjunath15@gmail.com" className="text-blue-600 underline">rudreshmanjunath15@gmail.com</a></p>
+            <p className="text-gray-700 mb-2">LinkedIn: <a href="https://www.linkedin.com/in/rudresh-manjunath/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">rudresh-manjunath</a></p>
+            <button className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700" onClick={() => setPage('main')}>Back</button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  if (page === 'privacy') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-10 max-w-lg w-full">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Privacy Policy</h2>
+            <p className="text-gray-700 mb-2">We use Firebase Authentication. Your data is safe and only used for login and interview purposes. No personal information is shared with third parties. For more details, contact the developer.</p>
+            <button className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700" onClick={() => setPage('main')}>Back</button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Login gating for interview and leaderboard
+  if ((step === 'upload' || step === 'topic' || step === 'interview' || step === 'result' || step === 'leaderboard') && !user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center">
+          <Login onLogin={(u) => {
+            setUser(u);
+            setStep('postLoginChoice');
+          }} />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // After login, show choice screen
+  if (step === 'postLoginChoice') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-10 flex flex-col items-center gap-8 w-full max-w-md">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+              Welcome! {user?.displayName || user?.email}
+            </h2>
+            <div className="flex flex-col gap-4 w-full">
+              <button
+                className="w-full px-6 py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
+                onClick={() => setStep('upload')}
+              >
+                Take a New Interview
+              </button>
+              <button
+                className="w-full px-6 py-4 bg-gray-200 text-gray-800 rounded-lg font-semibold text-lg hover:bg-gray-300 transition-colors"
+                onClick={() => setStep('leaderboard')}
+              >
+                View Leaderboard
+              </button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Main app flow
   return (
     <InterviewProvider>
-      <AppContent />
+      <div className="flex flex-col min-h-screen">
+        <NavBar />
+        <main className="flex-1">
+          <IntervieweeFlow step={step} setStep={setStep} />
+        </main>
+        <Footer />
+      </div>
     </InterviewProvider>
   );
 }
 
-export default App;
+export default App; // Ensure only one App function is exported

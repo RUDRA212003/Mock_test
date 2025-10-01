@@ -164,6 +164,7 @@ export function ResumeUpload({ onInfoExtracted }: ResumeUploadProps) {
     <div className="w-full max-w-2xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-lg p-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Upload Your Resume</h2>
+        {/* ...existing code... */}
 
         {/* ----------------- State 1: File Upload Form ----------------- */}
         {!showManualInput && !showConfirmation ? (
@@ -203,7 +204,10 @@ export function ResumeUpload({ onInfoExtracted }: ResumeUploadProps) {
             {error && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
+                <div>
+                  <p className="text-sm text-red-700">{error}</p>
+                  <p className="text-xs text-red-600 mt-2">If you see this error, please try uploading your resume in <b>DOCX format</b> or enter your details manually below.</p>
+                </div>
               </div>
             )}
 
