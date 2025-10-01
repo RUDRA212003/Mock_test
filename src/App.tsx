@@ -260,7 +260,7 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setPage('landing')}>
-              <img src="/public/logo.svg" alt="PREP AI Logo" className="w-10 h-10 rounded-lg" />
+              <img src="/Logo.svg" alt="PREP AI Logo" className="w-10 h-10 rounded-lg" />
               <h1 className="text-xl font-bold text-gray-800">PREP AI</h1>
             </div>
             {user && (
