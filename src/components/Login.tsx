@@ -94,9 +94,19 @@ export function Login({ onLogin }: { onLogin: (user: any) => void }) {
         <div className="mt-6 text-center">
           <button
             onClick={handleGoogleLogin}
-            className="w-full px-6 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+            className="w-full px-6 py-3 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-100 transition-colors shadow-sm"
             disabled={loading}
           >
+            {/* Google logo SVG */}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-5 h-5">
+              <g>
+                <path fill="#4285F4" d="M24 9.5c3.54 0 6.36 1.22 8.32 2.26l6.18-6.18C34.36 2.34 29.52 0 24 0 14.64 0 6.4 5.64 2.44 13.86l7.6 5.91C12.36 13.36 17.68 9.5 24 9.5z"/>
+                <path fill="#34A853" d="M46.1 24.5c0-1.64-.15-3.22-.44-4.75H24v9h12.44c-.54 2.92-2.18 5.39-4.64 7.07l7.6 5.91C43.6 37.6 46.1 31.6 46.1 24.5z"/>
+                <path fill="#FBBC05" d="M10.04 28.36c-.6-1.8-.94-3.7-.94-5.86s.34-4.06.94-5.86l-7.6-5.91C.86 15.36 0 19.52 0 24s.86 8.64 2.44 13.86l7.6-5.91z"/>
+                <path fill="#EA4335" d="M24 48c5.52 0 10.36-1.82 14.32-4.96l-7.6-5.91c-2.12 1.42-4.84 2.27-7.72 2.27-6.32 0-11.64-3.86-13.96-9.27l-7.6 5.91C6.4 42.36 14.64 48 24 48z"/>
+                <path fill="none" d="M0 0h48v48H0z"/>
+              </g>
+            </svg>
             {loading ? 'Logging in...' : 'Login with Google'}
           </button>
           <div className="mt-4">
