@@ -194,7 +194,7 @@ function App() {
 
   // Persist user in localStorage
   React.useEffect(() => {
-    const storedUser = localStorage.getItem('prep_ai_user');
+  const storedUser = localStorage.getItem('crisp_ai_user');
     if (storedUser) {
       try {
         setUserRaw(JSON.parse(storedUser));
@@ -229,9 +229,9 @@ function App() {
   const setUser = (u: any) => {
     setUserRaw(u);
     if (u) {
-      localStorage.setItem('prep_ai_user', JSON.stringify(u));
+      localStorage.setItem('crisp_ai_user', JSON.stringify(u));
     } else {
-      localStorage.removeItem('prep_ai_user');
+      localStorage.removeItem('crisp_ai_user');
     }
   };
 
@@ -241,8 +241,8 @@ function App() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setStep('landing'); setPage('main'); }}>
-            <img src="/Logo.svg" alt="PREP AI Logo" className="w-10 h-10 rounded-lg" />
-            <h1 className="text-xl font-bold text-gray-800">PREP AI</h1>
+            <img src="/Logo.svg" alt="CRISP AI Logo" className="w-10 h-10 rounded-lg" />
+            <h1 className="text-xl font-bold text-gray-800">CRISP AI</h1>
           </div>
           {user && (
             <button
@@ -279,7 +279,7 @@ function App() {
         <main className="flex-1 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg p-10 max-w-lg w-full">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">About</h2>
-            <p className="text-gray-700 mb-2">PREP AI developed by <b>Rudresh</b> from Kalpataru Institute of Technology, Tiptur.</p>
+            <p className="text-gray-700 mb-2">CRISP AI developed by <b>Rudresh</b> from Kalpataru Institute of Technology, Tiptur.</p>
             <button className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700" onClick={() => setPage('main')}>Back</button>
           </div>
         </main>
