@@ -1,9 +1,62 @@
 import React, { useState, useEffect } from 'react';
+import { db } from '../firebase';
+import { collection, addDoc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { Users, TrendingUp, Clock, Award, Search, Filter } from 'lucide-react';
 import { InterviewResult } from '../types';
 import { CandidateDetailModal } from './CandidateDetailModal'; // New component to be created
 
 export function InterviewerDashboard() {
+  const [showRatingModal, setShowRatingModal] = useState(true);
+  const [starRating, setStarRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  // Get current user email from localStorage or context
+  const userEmail = localStorage.getItem('user_email');
+
+  // Check if user already submitted a review (optional: fetch from Firestore)
+  useEffect(() => {
+    async function checkReview() {
+      if (!userEmail) return;
+      const q = query(collection(db, 'reviews'), where('email', '==', userEmail));
+      const snap = await getDocs(q);
+      if (!snap.empty) setShowRatingModal(false);
+    }
+    checkReview();
+  }, [userEmail]);
+  async function handleSubmitReview() {
+    if (starRating === 0) return;
+    setSubmitting(true);
+  const reviewEmail = userEmail || `anonymous_${Math.random().toString(36).substring(2, 10)}`;
+  const userName = localStorage.getItem('user_name') || 'Anonymous';
+    try {
+      const q = query(collection(db, 'rating'), where('email', '==', reviewEmail));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        // Update existing rating
+        await updateDoc(snap.docs[0].ref, {
+          name: userName,
+          email: reviewEmail,
+          'star rating': starRating,
+          'review': reviewText,
+          updatedAt: Date.now(),
+        });
+      } else {
+        // Add new rating
+        await addDoc(collection(db, 'rating'), {
+          name: userName,
+          email: reviewEmail,
+          'star rating': starRating,
+          'review': reviewText,
+          createdAt: Date.now(),
+        });
+      }
+      setShowRatingModal(false);
+    } catch (e) {
+      alert('Error submitting review.');
+    }
+    setSubmitting(false);
+  }
   const [results, setResults] = useState<InterviewResult[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTopic, setFilterTopic] = useState<string>('all');
@@ -60,7 +113,49 @@ export function InterviewerDashboard() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6">
+    <>
+      {showRatingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative animate-fade-in">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl"
+              onClick={() => setShowRatingModal(false)}
+              aria-label="Close"
+            >×</button>
+            <h2 className="text-xl font-bold mb-4 text-center">Rate Your Experience</h2>
+            <div className="flex justify-center mb-4">
+              {[1,2,3,4,5].map((star) => (
+                <span
+                  key={star}
+                  className={`cursor-pointer text-4xl transition-colors ${
+                    (hoverRating || starRating) >= star ? 'text-yellow-400' : 'text-gray-300'
+                  }`}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={() => setStarRating(star)}
+                  role="button"
+                  aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                >★</span>
+              ))}
+            </div>
+            <textarea
+              className="w-full border border-gray-300 rounded-lg p-3 mb-4 resize-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+              placeholder="Leave a review (optional)"
+              value={reviewText}
+              onChange={e => setReviewText(e.target.value)}
+              maxLength={300}
+            />
+            <button
+              className={`w-full py-2 rounded-lg font-bold text-white transition-colors ${starRating === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+              disabled={starRating === 0 || submitting}
+              onClick={handleSubmitReview}
+            >{submitting ? 'Submitting...' : 'Submit Rating'}</button>
+            <div className="text-xs text-gray-500 mt-2 text-center">You can close this window if you don't want to rate.</div>
+          </div>
+        </div>
+      )}
+      <div className="w-full max-w-7xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Interviewer Dashboard</h1>
         <p className="text-gray-600">Monitor and review candidate interview performance</p>
@@ -273,5 +368,7 @@ export function InterviewerDashboard() {
         )}
       </div>
     </div>
+  );
+    </>
   );
 }

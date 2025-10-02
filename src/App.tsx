@@ -11,6 +11,8 @@ import { WelcomeBackModal } from './components/WelcomeBackModal';
 import { InterviewerDashboard } from './components/InterviewerDashboard';
 import { CandidateInfo } from './types';
 
+
+
 type InterviewStep = 'landing' | 'upload' | 'topic' | 'interview' | 'result' | 'leaderboard' | 'postLoginChoice';
 interface IntervieweeFlowProps {
   step: InterviewStep;
@@ -223,6 +225,12 @@ function App() {
   };
 
   // Navigation bar
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  const [adminError, setAdminError] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const NavBar = () => (
     <nav className="bg-white shadow-sm border-b border-gray-200 w-full relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -231,17 +239,62 @@ function App() {
             <img src="/Logo.svg" alt="CRISP AI Logo" className="w-10 h-10 rounded-lg" />
             <h1 className="text-xl font-bold text-gray-800">CRISP AI</h1>
           </div>
-          {user && (
-            <button
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              onClick={() => setShowUserPanel((v) => !v)}
-              title="User Panel"
-            >
-              <span className="font-medium text-gray-700">{user.displayName || user.email}</span>
-            </button>
-          )}
+          <div className="flex items-center gap-4">
+            {/* <button
+              className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-colors"
+              onClick={() => setShowAdminModal(true)}
+            >Admin</button> */}
+            {user && (
+              <button
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                onClick={() => setShowUserPanel((v) => !v)}
+                title="User Panel"
+              >
+                <span className="font-medium text-gray-700">{user.displayName || user.email}</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
+      {showAdminModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm relative animate-fade-in">
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl" onClick={() => setShowAdminModal(false)} aria-label="Close">×</button>
+            <h2 className="text-xl font-bold mb-4 text-center">Admin Login</h2>
+            <input
+              type="email"
+              placeholder="Admin Email"
+              className="w-full border border-gray-300 rounded-lg p-3 mb-3"
+              value={adminEmail}
+              onChange={e => setAdminEmail(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full border border-gray-300 rounded-lg p-3 mb-3"
+              value={adminPass}
+              onChange={e => setAdminPass(e.target.value)}
+            />
+            {adminError && <div className="text-red-600 text-sm mb-2">{adminError}</div>}
+            <button
+              className="w-full py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700"
+              onClick={() => {
+                // Use .env.local for credentials
+                const envEmail = import.meta.env.VITE_ADMIN_EMAIL || 'rudratiptur@gmail.com';
+                const envPass = import.meta.env.VITE_ADMIN_PASS || 'Rudresh@123';
+                if (adminEmail === envEmail && adminPass === envPass) {
+                  setIsAdmin(true);
+                  setShowAdminModal(false);
+                  setPage('admin');
+                  setAdminError('');
+                } else {
+                  setAdminError('Invalid admin credentials');
+                }
+              }}
+            >Login</button>
+          </div>
+        </div>
+      )}
       {/* User panel dropdown */}
       {user && showUserPanel && (
         <div className="absolute top-16 right-8 bg-white shadow-lg rounded-lg p-6 z-50 min-w-[250px]">
@@ -259,6 +312,18 @@ function App() {
   );
 
   // Static pages
+  if (isAdmin && page === 'admin') {
+    const AdminPanel = require('./components/AdminPanel').AdminPanel;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-1">
+          <AdminPanel />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
   if (page === 'about') {
     return (
       <div className="min-h-screen flex flex-col">
