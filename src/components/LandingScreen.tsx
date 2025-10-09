@@ -272,7 +272,7 @@ export default function LandingScreen({ onStart }: { onStart: () => void }) {
                 Ready to transform your interview game?
               </h3>
               <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                No forms, no sign-ups needed—just click the button and begin your personalized practice session right away.
+                just click the button and begin your personalized practice session right away.
               </p>
               <motion.button
                 onClick={onStart}
